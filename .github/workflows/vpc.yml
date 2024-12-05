@@ -1,0 +1,58 @@
+name: Deploy Folder vpc
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+        - 'vpc/**'  
+  pull_request:
+    paths:
+        - 'vpc/**'
+    types:
+        - closed
+    branches:
+      - main
+
+jobs:
+  terraform:
+    name: Deploy VPC Folder Resources
+    runs-on: ubuntu-latest
+    permissions:
+        id-token: write
+        contents: read
+
+    steps:
+      - name: Configure aws credentials
+        uses: aws-actions/configure-aws-credentials@v4.0.2
+        with:
+            role-to-assume: arn:aws:iam::640168410393:role/GitHubActionsDeployerRole
+            aws-region: us-east-1  
+            
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: '1.8.5'
+
+      - name: Initialize Terraform
+        working-directory: ./vpc
+        run: |
+          terraform init 
+          -backend-config="bucket=cr7-tf-state" \
+          -backend-config="role_arn=arn:aws:iam::640168410393:role/GitHubActionsDeployerRole"
+
+      - name: Formatting the Terraform files
+        working-directory: ./vpc
+        run: terraform fmt -recursive
+
+      - name: Plan Terraform Changes
+        working-directory: ./vpc
+        run: terraform plan
+
+      - name: Apply Terraform Changes
+        if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
+        working-directory: ./vpc
+        run: terraform apply -auto-approve
