@@ -4,7 +4,11 @@ on:
   push:
     branches:
       - main
+    paths:
+      - 'ec2/**'
   pull_request:
+    paths:
+      - 'ec2/**'
     types:
         - closed
     branches:
