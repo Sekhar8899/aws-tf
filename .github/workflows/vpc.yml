@@ -39,11 +39,8 @@ jobs:
 
       - name: Initialize Terraform
         working-directory: ./vpc
-        run: |
-          terraform init 
-          -backend-config="bucket=cr7-tf-state" \
-          -backend-config="role_arn=arn:aws:iam::640168410393:role/GitHubActionsDeployerRole"
-
+        run: terraform init 
+          
       - name: Formatting the Terraform files
         working-directory: ./vpc
         run: terraform fmt -recursive
